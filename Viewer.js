@@ -46,20 +46,41 @@ var Viewer = function(){
     }
   } );
 
-  it.canvas.addEventListener( 'touchstart', function( _e ){
-    it.touched = true;
-    it.touchstart( _e );
+  it.hammer = new Hammer( it.canvas );
+  it.hammer.get( 'pinch' ).set( { enable : true } );
+  it.hammer.get( 'rotate' ).set( { enable : true } );
+
+  it.hammerMode = '';
+
+  it.hammer.on( 'panstart', function( _e ){
+    it.hammerPanstart( _e );
   } );
-  it.canvas.addEventListener( 'touchmove', function( _e ){
-    it.touchmove( _e );
+  it.hammer.on( 'panmove', function( _e ){
+    it.hammerPanmove( _e );
   } );
-  it.canvas.addEventListener( 'touchend', function( _e ){
-    it.touchend( _e );
-  } );
-  it.canvas.addEventListener( 'touchcancel', function( _e ){
-    it.touchend( _e );
+  it.hammer.on( 'panend pancancel', function( _e ){
+    it.hammerPanend( _e );
   } );
 
+  it.hammer.on( 'pinchstart', function( _e ){
+    it.hammerPinchstart( _e );
+  } );
+  it.hammer.on( 'pinchmove', function( _e ){
+    it.hammerPinchmove( _e );
+  } );
+  it.hammer.on( 'pinchend pinchcancel', function( _e ){
+    it.hammerPinchend( _e );
+  } );
+
+  it.hammer.on( 'rotatestart', function( _e ){
+    it.hammerRotatestart( _e );
+  } );
+  it.hammer.on( 'rotatemove', function( _e ){
+    it.hammerRotatemove( _e );
+  } );
+  it.hammer.on( 'rotateend rotatecancel', function( _e ){
+    it.hammerRotateend( _e );
+  } );
 };
 
 Viewer.prototype.update = function(){
@@ -147,23 +168,100 @@ Viewer.prototype.mousemove = function( _e ){
   }
 };
 
-Viewer.prototype.touchstart = function( _e ){
+Viewer.prototype.hammerPanstart = function( _e ){
   var it = this;
 
-  var touchCount = _e.targetTouches.length;
+  it.lastX = _e.center.x;
+  it.lastY = _e.center.y;
 };
 
-Viewer.prototype.touchmove = function( _e ){
+Viewer.prototype.hammerPanmove = function( _e ){
   var it = this;
 
-  var touchCount = _e.targetTouches.length;
-  // TODO touchstate single move spin zoom
+  if( !it.hammerMode && ( 5.0 < _e.distance ) ){
+    it.hammerMode = 'turn';
+  }
+
+  if( it.hammerMode === 'turn' ){
+    it.camLon += ( _e.center.x - it.lastX ) * 0.01 * Math.cos( it.camRot ) - ( _e.center.x - it.lastX ) * 0.01 * Math.sin( it.camRot );
+    it.camLat += ( _e.center.y - it.lastY ) * 0.01 * Math.sin( it.camRot ) + ( _e.center.y - it.lastY ) * 0.01 * Math.cos( it.camRot );
+    it.lastX = _e.center.x;
+    it.lastY = _e.center.y;
+  }
 };
 
-Viewer.prototype.touchend = function( _e ){
+Viewer.prototype.hammerPanend = function( _e ){
   var it = this;
 
-  it.touchState = 'end';
+  it.hammerMode = '';
+};
+
+Viewer.prototype.hammerPinchstart = function( _e ){
+  var it = this;
+
+  it.lastScale = _e.scale;
+
+  it.lastX = _e.center.x;
+  it.lastY = _e.center.y;
+};
+
+Viewer.prototype.hammerPinchmove = function( _e ){
+  var it = this;
+
+  if( !it.hammerMode && ( _e.scale < 0.95 || 1.05 < _e.scale ) ){
+    it.hammerMode = 'pinch';
+  }
+
+  if( !it.hammerMode && ( 10.0 < _e.distance ) ){
+    it.hammerMode = 'move';
+  }
+
+  if( it.hammerMode === 'pinch' ){
+    it.camPos.add( it.camDir.clone().multiplyScalar( Math.log( _e.scale - it.lastScale + 1.0 ) * 6.0 ) );
+    it.lastScale = _e.scale;
+  }
+
+  if( it.hammerMode === 'move' ){
+    it.camPos.add( it.camSid.clone().multiplyScalar( ( it.lastX - _e.center.x ) * 0.03 ) );
+    it.camPos.sub( it.camTop.clone().multiplyScalar( ( it.lastY - _e.center.y ) * 0.03 ) );
+    it.lastX = _e.center.x;
+    it.lastY = _e.center.y;
+  }
+};
+
+Viewer.prototype.hammerPinchend = function( _e ){
+  var it = this;
+
+  it.hammerMode = '';
+};
+
+Viewer.prototype.hammerRotatestart = function( _e ){
+  var it = this;
+
+  it.lastRotation = _e.rotation;
+  it.enableRotation = false;
+};
+
+Viewer.prototype.hammerRotatemove = function( _e ){
+  var it = this;
+
+  if( !it.hammerMode && ( 3.0 < Math.abs( _e.rotation ) ) ){
+    it.hammerMode = 'rotate';
+  }
+
+  if( it.hammerMode === 'rotate' ){
+    var r = ( _e.rotation - it.lastRotation );
+    if( r < -180.0 ){ r += 360.0; }
+    if( 180.0 < r ){ r -= 360.0; }
+    it.camRot -= r * 0.03;
+    it.lastRotation = _e.rotation;
+  }
+};
+
+Viewer.prototype.hammerRotateend = function( _e ){
+  var it = this;
+
+  it.hammerMode = '';
 };
 
 Viewer.prototype.mouseup = function( _e ){
