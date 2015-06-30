@@ -11,6 +11,11 @@ var ColorPicker = function( _parent ){
   it.color.h = 0;
   it.color.s = 50;
   it.color.l = 50;
+  it.color.r = 191;
+  it.color.g = 64;
+  it.color.b = 64;
+  it.color.mode = 'hsl';
+  it.color.text = 'hsl( 0, 50%, 50% )';
 
   it.open = false;
   it.openAni = 0.0;
@@ -40,6 +45,22 @@ var ColorPicker = function( _parent ){
   it.canvasEx.addEventListener( 'mousemove', function( _e ){ it.canvasExMouseMove( _e ); } );
   it.canvasEx.addEventListener( 'mouseup', function( _e ){ it.canvasExMouseUp( _e ); } );
   document.body.appendChild( it.canvasEx );
+
+  it.textbox = document.createElement( 'input' );
+  it.textbox.type = 'text';
+  it.textbox.value = it.getHex();
+  it.textbox.style.fontSize = it.size * 0.3 + 'px';
+  it.textbox.style.textAlign = 'center';
+  it.textbox.style.width = it.size * 1.8 + 'px';
+  it.textbox.style.height = it.size * 0.6 + 'px';
+  it.textbox.style.position = 'absolute';
+  it.textbox.style.background = '#666';
+  it.textbox.style.border = 'none';
+  it.textbox.style.color = '#ddd';
+  it.textbox.style.borderRadius = '4px';
+  it.textbox.addEventListener( 'keydown', function( _e ){
+    if( _e.which === 13 ){ it.setHex( it.textbox.value ) };
+  } );
 };
 
 ColorPicker.prototype.update = function(){
@@ -126,7 +147,7 @@ ColorPicker.prototype.resize = function(){
 
   it.canvasEx.width = window.innerWidth;
   it.canvasEx.height = window.innerHeight;
-}
+};
 
 ColorPicker.prototype.setSize = function( _size ){
   var it = this;
@@ -134,12 +155,69 @@ ColorPicker.prototype.setSize = function( _size ){
   it.size = _size;
   it.canvas.width = it.size;
   it.canvas.height = it.size;
-}
+};
+
+ColorPicker.prototype.getHex = function(){
+  var it = this;
+
+  var c = ( 1.0 - Math.abs( it.color.l * 2.0 / 100.0 - 1.0 ) ) * it.color.s / 100.0;
+  var x = c * ( 1.0 - Math.abs( ( ( it.color.h / 60.0 ) % 2.0 ) - 1.0 ) );
+
+  var r, g, b;
+  if( it.color.h < 60 ){ r = c; g = x; b = 0; }
+  else if( it.color.h < 120 ){ r = x; g = c; b = 0; }
+  else if( it.color.h < 180 ){ r = 0; g = c; b = x; }
+  else if( it.color.h < 240 ){ r = 0; g = x; b = c; }
+  else if( it.color.h < 300 ){ r = x; g = 0; b = c; }
+  else{ r = c; g = 0; b = x; }
+
+  var m = it.color.l / 100.0 - c / 2.0;
+  function hex( _i ){
+    return Math.round( _i * 255 ).toString( 16 ).replace( /^.$/, '0$&' );
+  }
+  return '#' + hex( r + m ) + hex( g + m ) + hex( b + m );
+};
+
+ColorPicker.prototype.setHex = function( _hex ){
+  var it = this;
+
+  var r = parseInt( _hex.substring( 1, 3 ), 16 ) / 255.0;
+  var g = parseInt( _hex.substring( 3, 5 ), 16 ) / 255.0;
+  var b = parseInt( _hex.substring( 5, 7 ), 16 ) / 255.0;
+
+  if( isNaN( r ) || isNaN( g ) || isNaN( b ) ){
+    it.change();
+    return;
+  }
+
+  var cMin = Math.min( Math.min( r, g ), b );
+  var cMax = Math.max( Math.max( r, g ), b );
+  var cDelta = cMax - cMin;
+
+  it.color.l = Math.floor( ( cMin + cMax ) / 2.0 * 100.0 );
+
+  if( cDelta === 0 ){
+    it.color.s = 0;
+    it.color.h = 0;
+  }else{
+    it.color.s = Math.floor( cDelta / ( 1.0 - Math.abs( it.color.l / 100.0 * 2.0 - 1.0 ) ) * 100.0 );
+    if( r === cMax ){ it.color.h = Math.floor( ( ( ( ( g - b ) / cDelta ) + 6.0 ) % 6.0 ) * 60.0 ); }
+    else if( g === cMax ){ it.color.h = Math.floor( ( ( ( b - r ) / cDelta ) + 2.0 ) * 60.0 ); }
+    else{ it.color.h = Math.floor( ( ( ( r - g ) / cDelta ) + 4.0 ) * 60.0 ); }
+  }
+
+  it.color.mode = 'rgb';
+
+  it.change();
+};
 
 ColorPicker.prototype.change = function( _e ){
   var it = this;
 
-  if( typeof it.onChange == 'function' ){ it.onChange( it.color ); }
+  if( it.color.mode === 'hsl' ){
+    it.textbox.value = it.getHex();
+  }
+  if( typeof it.onChange === 'function' ){ it.onChange( it.color ); }
 }
 
 ColorPicker.prototype.canvasMouseDown = function( _e ){
@@ -161,16 +239,19 @@ ColorPicker.prototype.canvasExMouseDown = function( _e ){
     it.clickState = 'close';
   }else if( dist < it.size ){
     it.clickState = 'h';
-    it.color.h = Math.floor( Math.atan2( _e.clientY - it.position.y, _e.clientX - it.position.x ) * 180.0 / Math.PI );
+    it.color.h = ( Math.round( Math.atan2( _e.clientY - it.position.y, _e.clientX - it.position.x ) * 180.0 / Math.PI ) + 360 ) % 360;
+    it.color.mode = 'hsl';
     it.change();
   }else if( dist < it.size * 1.6 ){
     if( _e.clientX < it.position.x ){
       it.clickState = 's';
-      it.color.s = Math.floor( ( it.position.y - _e.clientY ) / ( it.size ) * 50.0 + 50.0 );
+      it.color.s = Math.min( Math.max( Math.round( ( it.position.y - _e.clientY ) / ( it.size ) * 50.0 + 50.0 ), 0 ), 100 );
+      it.color.mode = 'hsl';
       it.change();
     }else{
       it.clickState = 'l';
-      it.color.l = Math.floor( ( it.position.y - _e.clientY ) / ( it.size ) * 50.0 + 50.0 );
+      it.color.l = Math.min( Math.max( Math.round( ( it.position.y - _e.clientY ) / ( it.size ) * 50.0 + 50.0 ), 0 ), 100 );
+      it.color.mode = 'hsl';
       it.change();
     }
   }else{
@@ -182,14 +263,17 @@ ColorPicker.prototype.canvasExMouseDown = function( _e ){
 ColorPicker.prototype.canvasExMouseMove = function( _e ){
   var it = this;
 
-  if( it.clickState == 'h' ){
-    it.color.h = Math.atan2( _e.clientY - it.position.y, _e.clientX - it.position.x ) * 180.0 / Math.PI;
+  if( it.clickState === 'h' ){
+    it.color.h = ( Math.round( Math.atan2( _e.clientY - it.position.y, _e.clientX - it.position.x ) * 180.0 / Math.PI ) + 360 ) % 360;
+    it.color.mode = 'hsl';
     it.change();
-  }else if( it.clickState == 's' ){
-    it.color.s = Math.floor( ( it.position.y - _e.clientY ) / ( it.size ) * 50.0 + 50.0 );
+  }else if( it.clickState === 's' ){
+    it.color.s = Math.min( Math.max( Math.round( ( it.position.y - _e.clientY ) / ( it.size ) * 50.0 + 50.0 ), 0 ), 100 );
+    it.color.mode = 'hsl';
     it.change();
-  }else if( it.clickState == 'l' ){
-    it.color.l = Math.floor( ( it.position.y - _e.clientY ) / ( it.size ) * 50.0 + 50.0 );
+  }else if( it.clickState === 'l' ){
+    it.color.l = Math.min( Math.max( Math.round( ( it.position.y - _e.clientY ) / ( it.size ) * 50.0 + 50.0 ), 0 ), 100 );
+    it.color.mode = 'hsl';
     it.change();
   }
 };

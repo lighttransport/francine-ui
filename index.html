@@ -7,13 +7,15 @@
 		<title></title>
 		<style>
       body {
-        background : #444;
+        background : #888;
+				overflow : hidden;
       }
 		</style>
 	</head>
 	<body>
 		<script src="three.js"></script>
     <script src="Viewer.js"></script>
+    <script src="ControlPanel.js"></script>
     <script src="ColorPicker.js"></script>
 		<script>
       updateFunctions = [];
@@ -32,7 +34,7 @@
 					resizeFunctions[ i ]();
 				}
 			}
-			window.onresize = resize;
+			window.addEventListener( 'resize', resize );
 
 			keydownFunctions = [];
 			function keydown( _e ){
@@ -51,19 +53,33 @@
 			window.addEventListener( 'keyup', keyup );
 
 			viewer = new Viewer();
+			viewer.canvas.style.position = 'absolute';
+			viewer.canvas.style.left = '0px';
+			viewer.canvas.style.top = '0px';
 			document.body.appendChild( viewer.canvas );
+			resizeFunctions.push( function(){
+				viewer.setSize( window.innerWidth, window.innerHeight );
+			} );
       updateFunctions.push( function(){ viewer.update(); } );
       keydownFunctions.push( function( _e ){ viewer.keydown( _e ); } );
       keyupFunctions.push( function( _e ){ viewer.keyup( _e ); } );
 
+			panel = new ControlPanel();
+      updateFunctions.push( function(){ panel.update(); } );
+      resizeFunctions.push( function(){ panel.setSize( window.innerWidth, window.innerHeight ); } );
+
       colorPicker = new ColorPicker();
-			colorPicker.canvas.style.position = 'absolute';
 			colorPicker.setSize( 48 );
-      document.body.appendChild( colorPicker.canvas );
+			colorPicker.canvas.style.position = 'absolute';
+			colorPicker.canvas.style.left = '40px';
+			colorPicker.canvas.style.top = '50px';
+      panel.panelRight.appendChild( colorPicker.canvas );
+		  colorPicker.textbox.style.left = '100px';
+		  colorPicker.textbox.style.top = '58px';
+			panel.panelRight.appendChild( colorPicker.textbox );
       updateFunctions.push( function(){ colorPicker.update(); } );
       resizeFunctions.push( function(){ colorPicker.resize(); } );
-			resizeFunctions.push( function(){
-			} );
+
 			colorPicker.onChange = function( _color ){
 			};
 

@@ -7,9 +7,8 @@ var Viewer = function(){
   it.keys = [];
 
   it.scene = new THREE.Scene();
-  it.planeGeometry = new THREE.PlaneGeometry( 5, 5, 32, 32 );
+  it.planeGeometry = new THREE.PlaneGeometry( 32, 32, 32, 32 );
   it.planeMaterial = new THREE.MeshBasicMaterial( {
-    color : 0xffffff,
     wireframe : true
   } );
   it.plane = new THREE.Mesh( it.planeGeometry, it.planeMaterial );
@@ -27,7 +26,7 @@ var Viewer = function(){
   it.camera.position.copy( it.camPos );
   it.setCam();
 
-  it.renderer = new THREE.WebGLRenderer();
+  it.renderer = new THREE.WebGLRenderer( { alpha : true } );
   it.renderer.setSize( it.width, it.height );
   it.canvas = it.renderer.domElement;
 
@@ -101,11 +100,11 @@ Viewer.prototype.setSize = function( _width, _height ){
   var it = this;
 
   it.width = _width;
-  it.height - _height;
+  it.height = _height;
 
-  it.aspect = it.width / it.height;
-  it.camera.updateProjectionMatrix();
+  it.camera.aspect = it.width / it.height;
   it.renderer.setSize( it.width, it.height );
+  it.camera.updateProjectionMatrix();
 };
 
 Viewer.prototype.setCam = function(){
