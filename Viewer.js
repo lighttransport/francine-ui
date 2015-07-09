@@ -30,22 +30,6 @@ var Viewer = function(){
   it.renderer.setSize( it.width, it.height );
   it.canvas = it.renderer.domElement;
 
-  it.canvas.addEventListener( 'mousedown', function( _e ){
-    if( !it.touched ){
-      it.mousedown( _e );
-    }
-  } );
-  it.canvas.addEventListener( 'mousemove', function( _e ){
-    if( !it.touched ){
-      it.mousemove( _e );
-    }
-  } );
-  it.canvas.addEventListener( 'mouseup', function( _e ){
-    if( !it.touched ){
-      it.mouseup( _e );
-    }
-  } );
-
   it.hammer = new Hammer( it.canvas );
   it.hammer.get( 'pinch' ).set( { enable : true } );
   it.hammer.get( 'rotate' ).set( { enable : true } );
@@ -183,8 +167,8 @@ Viewer.prototype.hammerPanmove = function( _e ){
   }
 
   if( it.hammerMode === 'turn' ){
-    it.camLon += ( _e.center.x - it.lastX ) * 0.01 * Math.cos( it.camRot ) - ( _e.center.x - it.lastX ) * 0.01 * Math.sin( it.camRot );
-    it.camLat += ( _e.center.y - it.lastY ) * 0.01 * Math.sin( it.camRot ) + ( _e.center.y - it.lastY ) * 0.01 * Math.cos( it.camRot );
+    it.camLon += ( _e.center.x - it.lastX ) * 0.003 * Math.cos( it.camRot ) - ( _e.center.x - it.lastX ) * 0.003 * Math.sin( it.camRot );
+    it.camLat += ( _e.center.y - it.lastY ) * 0.003 * Math.sin( it.camRot ) + ( _e.center.y - it.lastY ) * 0.003 * Math.cos( it.camRot );
     it.lastX = _e.center.x;
     it.lastY = _e.center.y;
   }
@@ -199,8 +183,14 @@ Viewer.prototype.hammerPanend = function( _e ){
 Viewer.prototype.hammerPinchstart = function( _e ){
   var it = this;
 
-  it.lastScale = _e.scale;
+  console.log( _e);
 
+  var distX = _e.pointers[ 1 ].clientX - _e.pointers[ 0 ].clientX;
+  var distY = _e.pointers[ 1 ].clientY - _e.pointers[ 0 ].clientY;
+  var dist = Math.sqrt( distX * distX + distY * distY );
+  it.firstDist = dist;
+
+  it.lastDist = dist;
   it.lastX = _e.center.x;
   it.lastY = _e.center.y;
 };
@@ -208,7 +198,11 @@ Viewer.prototype.hammerPinchstart = function( _e ){
 Viewer.prototype.hammerPinchmove = function( _e ){
   var it = this;
 
-  if( !it.hammerMode && ( _e.scale < 0.95 || 1.05 < _e.scale ) ){
+  var distX = _e.pointers[ 1 ].clientX - _e.pointers[ 0 ].clientX;
+  var distY = _e.pointers[ 1 ].clientY - _e.pointers[ 0 ].clientY;
+  var dist = Math.sqrt( distX * distX + distY * distY );
+
+  if( !it.hammerMode && 20 < Math.abs( dist - it.firstDist ) ){
     it.hammerMode = 'pinch';
   }
 
@@ -217,16 +211,16 @@ Viewer.prototype.hammerPinchmove = function( _e ){
   }
 
   if( it.hammerMode === 'pinch' ){
-    it.camPos.add( it.camDir.clone().multiplyScalar( Math.log( _e.scale - it.lastScale + 1.0 ) * 6.0 ) );
-    it.lastScale = _e.scale;
+    it.camPos.add( it.camDir.clone().multiplyScalar( ( dist - it.lastDist ) * 0.01 ) );
   }
+  it.lastDist = dist;
 
   if( it.hammerMode === 'move' ){
-    it.camPos.add( it.camSid.clone().multiplyScalar( ( it.lastX - _e.center.x ) * 0.03 ) );
-    it.camPos.sub( it.camTop.clone().multiplyScalar( ( it.lastY - _e.center.y ) * 0.03 ) );
-    it.lastX = _e.center.x;
-    it.lastY = _e.center.y;
+    it.camPos.add( it.camSid.clone().multiplyScalar( ( it.lastX - _e.center.x ) * 0.012 ) );
+    it.camPos.sub( it.camTop.clone().multiplyScalar( ( it.lastY - _e.center.y ) * 0.012 ) );
   }
+  it.lastX = _e.center.x;
+  it.lastY = _e.center.y;
 };
 
 Viewer.prototype.hammerPinchend = function( _e ){
@@ -245,7 +239,7 @@ Viewer.prototype.hammerRotatestart = function( _e ){
 Viewer.prototype.hammerRotatemove = function( _e ){
   var it = this;
 
-  if( !it.hammerMode && ( 3.0 < Math.abs( _e.rotation ) ) ){
+  if( !it.hammerMode && ( 5.0 < Math.abs( _e.rotation ) ) ){
     it.hammerMode = 'rotate';
   }
 
@@ -254,8 +248,8 @@ Viewer.prototype.hammerRotatemove = function( _e ){
     if( r < -180.0 ){ r += 360.0; }
     if( 180.0 < r ){ r -= 360.0; }
     it.camRot -= r * 0.03;
-    it.lastRotation = _e.rotation;
   }
+  it.lastRotation = _e.rotation;
 };
 
 Viewer.prototype.hammerRotateend = function( _e ){

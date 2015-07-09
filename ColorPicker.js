@@ -1,4 +1,4 @@
-var ColorPicker = function( _parent ){
+var ColorPicker = function(){
   var it = this;
 
   it.size = 48;
@@ -29,7 +29,6 @@ var ColorPicker = function( _parent ){
   it.context = it.canvas.getContext( '2d' );
   it.canvas.width = it.size;
   it.canvas.height = it.size;
-  it.canvas.addEventListener( 'mousedown', function( _e ){ it.canvasMouseDown( _e ); } );
 
   it.canvasEx = document.createElement( 'canvas' );
   it.contextEx = it.canvasEx.getContext( '2d' );
@@ -41,9 +40,18 @@ var ColorPicker = function( _parent ){
   it.canvasEx.height = window.innerHeight;
   it.canvasEx.style.display = 'none';
 
-  it.canvasEx.addEventListener( 'mousedown', function( _e ){ it.canvasExMouseDown( _e ); } );
-  it.canvasEx.addEventListener( 'mousemove', function( _e ){ it.canvasExMouseMove( _e ); } );
-  it.canvasEx.addEventListener( 'mouseup', function( _e ){ it.canvasExMouseUp( _e ); } );
+  it.canvas.addEventListener( 'mousedown', function( _e ){ it.canvasMouseDown( _e ); } );
+
+  it.hammer = new Hammer( it.canvasEx );
+  it.hammer.on( 'panstart tap', function( _e ){
+    it.hammerPanstart( _e );
+  } );
+  it.hammer.on( 'panmove', function( _e ){
+    it.hammerPanmove( _e );
+  } );
+  it.hammer.on( 'panend pancancel', function( _e ){
+    it.hammerPanend( _e );
+  } );
   document.body.appendChild( it.canvasEx );
 
   it.textbox = document.createElement( 'input' );
@@ -53,7 +61,6 @@ var ColorPicker = function( _parent ){
   it.textbox.style.textAlign = 'center';
   it.textbox.style.width = it.size * 1.8 + 'px';
   it.textbox.style.height = it.size * 0.6 + 'px';
-  it.textbox.style.position = 'absolute';
   it.textbox.style.background = '#666';
   it.textbox.style.border = 'none';
   it.textbox.style.color = '#ddd';
@@ -230,27 +237,30 @@ ColorPicker.prototype.canvasMouseDown = function( _e ){
   it.clickState = 'open';
 };
 
-ColorPicker.prototype.canvasExMouseDown = function( _e ){
+ColorPicker.prototype.hammerPanstart = function( _e ){
   var it = this;
 
-  var dist = Math.sqrt( ( _e.clientX - it.position.x ) * ( _e.clientX - it.position.x ) + ( _e.clientY - it.position.y ) * ( _e.clientY - it.position.y ) );
+  var x = _e.center.x;
+  var y = _e.center.y;
+
+  var dist = Math.sqrt( ( x - it.position.x ) * ( x - it.position.x ) + ( y - it.position.y ) * ( y - it.position.y ) );
   if( dist < it.size * 0.5 ){
     it.open = false;
     it.clickState = 'close';
   }else if( dist < it.size ){
     it.clickState = 'h';
-    it.color.h = ( Math.round( Math.atan2( _e.clientY - it.position.y, _e.clientX - it.position.x ) * 180.0 / Math.PI ) + 360 ) % 360;
+    it.color.h = ( Math.round( Math.atan2( y - it.position.y, x - it.position.x ) * 180.0 / Math.PI ) + 360 ) % 360;
     it.color.mode = 'hsl';
     it.change();
   }else if( dist < it.size * 1.6 ){
-    if( _e.clientX < it.position.x ){
+    if( x < it.position.x ){
       it.clickState = 's';
-      it.color.s = Math.min( Math.max( Math.round( ( it.position.y - _e.clientY ) / ( it.size ) * 50.0 + 50.0 ), 0 ), 100 );
+      it.color.s = Math.min( Math.max( Math.round( ( it.position.y - y ) / ( it.size ) * 50.0 + 50.0 ), 0 ), 100 );
       it.color.mode = 'hsl';
       it.change();
     }else{
       it.clickState = 'l';
-      it.color.l = Math.min( Math.max( Math.round( ( it.position.y - _e.clientY ) / ( it.size ) * 50.0 + 50.0 ), 0 ), 100 );
+      it.color.l = Math.min( Math.max( Math.round( ( it.position.y - y ) / ( it.size ) * 50.0 + 50.0 ), 0 ), 100 );
       it.color.mode = 'hsl';
       it.change();
     }
@@ -260,25 +270,28 @@ ColorPicker.prototype.canvasExMouseDown = function( _e ){
   }
 };
 
-ColorPicker.prototype.canvasExMouseMove = function( _e ){
+ColorPicker.prototype.hammerPanmove = function( _e ){
   var it = this;
 
+  var x = _e.center.x;
+  var y = _e.center.y;
+
   if( it.clickState === 'h' ){
-    it.color.h = ( Math.round( Math.atan2( _e.clientY - it.position.y, _e.clientX - it.position.x ) * 180.0 / Math.PI ) + 360 ) % 360;
+    it.color.h = ( Math.round( Math.atan2( y - it.position.y, x - it.position.x ) * 180.0 / Math.PI ) + 360 ) % 360;
     it.color.mode = 'hsl';
     it.change();
   }else if( it.clickState === 's' ){
-    it.color.s = Math.min( Math.max( Math.round( ( it.position.y - _e.clientY ) / ( it.size ) * 50.0 + 50.0 ), 0 ), 100 );
+    it.color.s = Math.min( Math.max( Math.round( ( it.position.y - y ) / ( it.size ) * 50.0 + 50.0 ), 0 ), 100 );
     it.color.mode = 'hsl';
     it.change();
   }else if( it.clickState === 'l' ){
-    it.color.l = Math.min( Math.max( Math.round( ( it.position.y - _e.clientY ) / ( it.size ) * 50.0 + 50.0 ), 0 ), 100 );
+    it.color.l = Math.min( Math.max( Math.round( ( it.position.y - y ) / ( it.size ) * 50.0 + 50.0 ), 0 ), 100 );
     it.color.mode = 'hsl';
     it.change();
   }
 };
 
-ColorPicker.prototype.canvasExMouseUp = function( _e ){
+ColorPicker.prototype.hammerPanend = function( _e ){
   var it = this;
 
   it.clickState = '';

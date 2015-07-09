@@ -18,6 +18,7 @@
     <script src="Viewer.js"></script>
     <script src="ControlPanel.js"></script>
     <script src="ColorPicker.js"></script>
+    <script src="SunPosition.js"></script>
 		<script>
       updateFunctions = [];
       function update(){
@@ -72,14 +73,27 @@
       colorPicker = new ColorPicker();
 			colorPicker.setSize( 48 );
 			colorPicker.canvas.style.position = 'absolute';
-			colorPicker.canvas.style.left = '40px';
+			colorPicker.canvas.style.left = '45px';
 			colorPicker.canvas.style.top = '50px';
       panel.panelRight.appendChild( colorPicker.canvas );
-		  colorPicker.textbox.style.left = '100px';
-		  colorPicker.textbox.style.top = '58px';
-			panel.panelRight.appendChild( colorPicker.textbox );
       updateFunctions.push( function(){ colorPicker.update(); } );
       resizeFunctions.push( function(){ colorPicker.resize(); } );
+		  colorPicker.textbox.style.position = 'absolute';
+		  colorPicker.textbox.style.left = '105px';
+		  colorPicker.textbox.style.top = '58px';
+			panel.panelRight.appendChild( colorPicker.textbox );
+
+			sunPosition = new SunPosition();
+			sunPosition.setSize( 160 );
+			sunPosition.canvas.style.position = 'absolute';
+			sunPosition.canvas.style.left = '40px';
+			sunPosition.canvas.style.top = '110px';
+      panel.panelRight.appendChild( sunPosition.canvas );
+      updateFunctions.push( function(){ sunPosition.update(); } );
+		  sunPosition.textboxes.style.position = 'absolute';
+			sunPosition.textboxes.style.left = '40px';
+			sunPosition.textboxes.style.top = '300px';
+			panel.panelRight.appendChild( sunPosition.textboxes );
 
 			colorPicker.onChange = function( _color ){
 			};
