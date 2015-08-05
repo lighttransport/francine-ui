@@ -22,8 +22,14 @@ var ColorPicker = function(){
 
   it.clickState = '';
 
-  it.gradientImage = new Image();
-  it.gradientImage.src = 'gradient.png';
+  it.hImage = new Image();
+  it.hImage.src = 'gradient.png';
+
+  it.slCanvas = document.createElement( 'canvas' );
+  it.slCanvas.width = it.size * 3.2;
+  it.slCanvas.height = it.size * 3.2;
+  it.slCanvas.context = it.slCanvas.getContext( '2d' );
+  it.prepareSLCanvas();
 
   it.canvas = document.createElement( 'canvas' );
   it.context = it.canvas.getContext( '2d' );
@@ -70,6 +76,30 @@ var ColorPicker = function(){
   } );
 };
 
+ColorPicker.prototype.prepareSLCanvas = function(){
+  var it = this;
+  var context = it.slCanvas.context;
+
+  context.clearRect( 0, 0, it.size*2, it.size*2 );
+
+  var gradS = context.createLinearGradient( 0, it.size * 0.6, 0, it.size * 2.6 );
+  gradS.addColorStop( 0, 'hsl( ' + it.color.h + ', 100%, ' + it.color.l + '% )' );
+  gradS.addColorStop( 1, 'hsl( ' + it.color.h + ', 0%, ' + it.color.l + '% )' );
+  context.fillStyle = gradS;
+  context.beginPath();
+  context.arc( it.size * 1.6, it.size * 1.6, it.size * 1.6, Math.PI * 0.5, Math.PI * 1.5 );
+  context.fill();
+
+  var gradL = context.createLinearGradient( 0, it.size * 0.6, 0, it.size * 2.6 );
+  gradL.addColorStop( 0, 'hsl( ' + it.color.h + ', ' + it.color.s + '%, 100% )' );
+  gradL.addColorStop( 0.5, 'hsl( ' + it.color.h + ', ' + it.color.s + '%, 50% )' );
+  gradL.addColorStop( 1, 'hsl( ' + it.color.h + ', ' + it.color.s + '%, 0% )' );
+  context.fillStyle = gradL;
+  context.beginPath();
+  context.arc( it.size * 1.6, it.size * 1.6, it.size * 1.6, Math.PI * 1.5, Math.PI * 2.5 );
+  context.fill();
+};
+
 ColorPicker.prototype.update = function(){
   var it = this;
 
@@ -91,7 +121,7 @@ ColorPicker.prototype.update = function(){
   it.context.arc( it.size * 0.5, it.size * 0.5, it.size * 0.45, 0.0, 2.0 * Math.PI );
   it.context.fill();
 
-  if( 0.1 < it.openAni ){
+  if( 0.3 < it.openAni ){
     it.canvasEx.style.display = 'block';
 
     it.contextEx.clearRect( 0, 0, it.canvasEx.width, it.canvasEx.height );
@@ -101,22 +131,8 @@ ColorPicker.prototype.update = function(){
     it.contextEx.arc( it.position.x, it.position.y, it.size * 1.7 * Math.pow( it.openAni, 3.0 ), 0.0, 2.0 * Math.PI );
     it.contextEx.fill();
 
-    var gradS = it.contextEx.createLinearGradient( 0, it.position.y - it.size, 0, it.position.y + it.size );
-    gradS.addColorStop( 0, 'hsl( ' + it.color.h + ', 100%, ' + it.color.l + '% )' );
-    gradS.addColorStop( 1, 'hsl( ' + it.color.h + ', 0%, ' + it.color.l + '% )' );
-    it.contextEx.fillStyle = gradS;
-    it.contextEx.beginPath();
-    it.contextEx.arc( it.position.x, it.position.y, it.size * 1.6 * Math.pow( it.openAni, 3.0 ), Math.PI * 0.5, Math.PI * 1.5 );
-    it.contextEx.fill();
-
-    var gradL = it.contextEx.createLinearGradient( 0, it.position.y - it.size, 0, it.position.y + it.size );
-    gradL.addColorStop( 0, 'hsl( ' + it.color.h + ', ' + it.color.s + '%, 100% )' );
-    gradL.addColorStop( 0.5, 'hsl( ' + it.color.h + ', ' + it.color.s + '%, 50% )' );
-    gradL.addColorStop( 1, 'hsl( ' + it.color.h + ', ' + it.color.s + '%, 0% )' );
-    it.contextEx.fillStyle = gradL;
-    it.contextEx.beginPath();
-    it.contextEx.arc( it.position.x, it.position.y, it.size * 1.6 * Math.pow( it.openAni, 3.0 ), Math.PI * 1.5, Math.PI * 2.5 );
-    it.contextEx.fill();
+    var size = it.size * 3.2 * Math.pow( it.openAni, 3.0 );
+    it.contextEx.drawImage( it.slCanvas, it.position.x - size / 2.0, it.position.y - size / 2.0, size, size );
 
     it.contextEx.fillStyle = '#222';
     it.contextEx.beginPath();
@@ -128,7 +144,7 @@ ColorPicker.prototype.update = function(){
     it.contextEx.arc( it.position.x, it.position.y, it.size * 1.61 * Math.pow( it.openAni, 3.0 ), Math.PI * 0.5 - 0.04, Math.PI * 0.5 + 0.04 );
     it.contextEx.fill();
 
-    it.contextEx.drawImage( it.gradientImage, it.position.x - it.size * it.openAni, it.position.y - it.size * it.openAni, it.size * 2.0 * it.openAni, it.size * 2.0 * it.openAni );
+    it.contextEx.drawImage( it.hImage, it.position.x - it.size * it.openAni, it.position.y - it.size * it.openAni, it.size * 2.0 * it.openAni, it.size * 2.0 * it.openAni );
 
     it.contextEx.fillStyle = '#222';
     it.contextEx.beginPath();
@@ -224,6 +240,7 @@ ColorPicker.prototype.change = function( _e ){
   if( it.color.mode === 'hsl' ){
     it.textbox.value = it.getHex();
   }
+  it.prepareSLCanvas();
   if( typeof it.onChange === 'function' ){ it.onChange( it.color ); }
 }
 

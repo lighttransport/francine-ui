@@ -8,13 +8,10 @@ var Viewer = function(){
 
   it.scene = new THREE.Scene();
 
-  it.planeGeometry = new THREE.PlaneGeometry( 32, 32, 32, 32 );
-  it.planeMaterial = new THREE.MeshBasicMaterial( {
-    wireframe : true
-  } );
-  it.plane = new THREE.Mesh( it.planeGeometry, it.planeMaterial );
-  it.scene.add( it.plane );
-  it.plane.rotation.x = Math.PI * 0.5;
+  it.grid = new THREE.GridHelper( 33, 1 );
+  it.grid.setColors( '#ddd', '#888' );
+  it.scene.add( it.grid );
+  //it.grid.rotation.x = Math.PI * 0.5;
 
   it.camera = new THREE.PerspectiveCamera( 75, it.width / it.height, 0.1, 100 );
   it.camPos = new THREE.Vector3( 0, 1, 5 );
@@ -27,7 +24,7 @@ var Viewer = function(){
   it.prepareCam();
 
   it.sunDir = new THREE.Vector3( 0, 0, 0 );
-  it.sunGeometry = new THREE.SphereGeometry( 1, 8, 8 );
+  it.sunGeometry = new THREE.OctahedronGeometry( 0.5, 0 );
   it.sunMaterial = new THREE.MeshBasicMaterial( {
     wireframe : true
   } );
