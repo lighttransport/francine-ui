@@ -83,6 +83,9 @@
 		  colorPicker.textbox.style.top = '58px';
 			panel.panelRight.appendChild( colorPicker.textbox );
 
+			colorPicker.onChange = function( _color ){
+			};
+
 			sunPosition = new SunPosition();
 			sunPosition.setSize( 160 );
 			sunPosition.canvas.style.position = 'absolute';
@@ -94,8 +97,9 @@
 			sunPosition.textboxes.style.left = '40px';
 			sunPosition.textboxes.style.top = '300px';
 			panel.panelRight.appendChild( sunPosition.textboxes );
-
-			colorPicker.onChange = function( _color ){
+			sunPosition.onChange = function( _azimuth, _altitude ){
+				console.log( _azimuth );
+				viewer.setSun( _azimuth, _altitude );
 			};
 
 			resize();

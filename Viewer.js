@@ -7,6 +7,7 @@ var Viewer = function(){
   it.keys = [];
 
   it.scene = new THREE.Scene();
+
   it.planeGeometry = new THREE.PlaneGeometry( 32, 32, 32, 32 );
   it.planeMaterial = new THREE.MeshBasicMaterial( {
     wireframe : true
@@ -23,8 +24,17 @@ var Viewer = function(){
   it.camLon = 0.0;
   it.camLat = 0.0;
   it.camRot = 0.0;
-  it.camera.position.copy( it.camPos );
-  it.setCam();
+  it.prepareCam();
+
+  it.sunDir = new THREE.Vector3( 0, 0, 0 );
+  it.sunGeometry = new THREE.SphereGeometry( 1, 8, 8 );
+  it.sunMaterial = new THREE.MeshBasicMaterial( {
+    wireframe : true
+  } );
+  it.sun = new THREE.Mesh( it.sunGeometry, it.sunMaterial );
+  it.scene.add( it.sun );
+  it.setSun( 0, 0 );
+  it.prepareSun();
 
   it.renderer = new THREE.WebGLRenderer( { alpha : true } );
   it.renderer.setSize( it.width, it.height );
@@ -42,7 +52,10 @@ var Viewer = function(){
   it.hammer.on( 'panmove', function( _e ){
     it.hammerPanmove( _e );
   } );
-  it.hammer.on( 'panend pancancel', function( _e ){
+  it.hammer.on( 'panend', function( _e ){
+    it.hammerPanend( _e );
+  } );
+  it.hammer.on( 'pancancel', function( _e ){
     it.hammerPanend( _e );
   } );
 
@@ -52,7 +65,10 @@ var Viewer = function(){
   it.hammer.on( 'pinchmove', function( _e ){
     it.hammerPinchmove( _e );
   } );
-  it.hammer.on( 'pinchend pinchcancel', function( _e ){
+  it.hammer.on( 'pinchend', function( _e ){
+    it.hammerPinchend( _e );
+  } );
+  it.hammer.on( 'pinchcancel', function( _e ){
     it.hammerPinchend( _e );
   } );
 
@@ -62,7 +78,10 @@ var Viewer = function(){
   it.hammer.on( 'rotatemove', function( _e ){
     it.hammerRotatemove( _e );
   } );
-  it.hammer.on( 'rotateend rotatecancel', function( _e ){
+  it.hammer.on( 'rotateend', function( _e ){
+    it.hammerRotateend( _e );
+  } );
+  it.hammer.on( 'rotatecancel', function( _e ){
     it.hammerRotateend( _e );
   } );
 };
@@ -96,7 +115,8 @@ Viewer.prototype.update = function(){
   if( it.keys[ 69 ] ){ // e
     it.camRot += vel;
   }
-  it.setCam();
+  it.prepareCam();
+  it.prepareSun();
 
   it.renderer.render( it.scene, it.camera );
 };
@@ -112,7 +132,7 @@ Viewer.prototype.setSize = function( _width, _height ){
   it.camera.updateProjectionMatrix();
 };
 
-Viewer.prototype.setCam = function(){
+Viewer.prototype.prepareCam = function(){
   var it = this;
 
   it.camera.position.copy( it.camPos );
@@ -126,6 +146,20 @@ Viewer.prototype.setCam = function(){
 
   it.camera.lookAt( it.camPos.clone().add( it.camDir ) );
   it.camera.up.copy( it.camTop );
+};
+
+Viewer.prototype.setSun = function( _azimuth, _altitude ){
+  var it = this;
+
+  it.sunDir = new THREE.Vector3( 0, 0, -1 );
+  it.sunDir.applyAxisAngle( new THREE.Vector3( 1, 0, 0 ), _altitude / 180.0 * Math.PI );
+  it.sunDir.applyAxisAngle( new THREE.Vector3( 0, -1, 0 ), _azimuth / 180.0 * Math.PI );
+};
+
+Viewer.prototype.prepareSun = function(){
+  var it = this;
+
+  it.sun.position.copy( it.sunDir.clone().multiplyScalar( 10.0 ).add( it.camPos ) );
 };
 
 Viewer.prototype.mousedown = function( _e ){
@@ -182,8 +216,6 @@ Viewer.prototype.hammerPanend = function( _e ){
 
 Viewer.prototype.hammerPinchstart = function( _e ){
   var it = this;
-
-  console.log( _e);
 
   var distX = _e.pointers[ 1 ].clientX - _e.pointers[ 0 ].clientX;
   var distY = _e.pointers[ 1 ].clientY - _e.pointers[ 0 ].clientY;

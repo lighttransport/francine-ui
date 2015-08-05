@@ -21,13 +21,25 @@ var SunPosition = function(){
   it.hammer = new Hammer( it.canvas );
   it.canvas.addEventListener( 'mousedown', function( _e ){
     it.mousedown( _e );
-  })
-  it.hammer.on( 'panstart panmove', function( _e ){
+  }, false );
+  it.canvas.addEventListener( 'touchstart', function( _e ){
+    it.mousedown( _e );
+  }, false );
+  it.hammer.on( 'panmove', function( _e ){
     it.hammerPanmove( _e );
-  } );
+  }, false );
+  it.hammer.on( 'panstart', function( _e ){
+    it.hammerPanmove( _e );
+  }, false );
   it.canvas.addEventListener( 'mouseup', function( _e ){
     it.mouseup( _e );
-  })
+  }, false );
+  it.canvas.addEventListener( 'touchend', function( _e ){
+    it.mouseup( _e );
+  }, false );
+  it.canvas.addEventListener( 'touchcancel', function( _e ){
+    it.mouseup( _e );
+  }, false );
 
   it.textboxes = document.createElement( 'div' );
   it.textboxes.style.fontSize = it.size * 0.04 + 'px';
@@ -147,14 +159,22 @@ SunPosition.prototype.change = function( _e ){
   it.azimuthTextbox.value = it.azimuth.toFixed( 3 );
   it.altitudeTextbox.value = it.altitude.toFixed( 3 );
 
-  if( typeof it.onChange === 'function' ){ it.onChange( it.color ); }
+  if( typeof it.onChange === 'function' ){ it.onChange( it.azimuth, it.altitude ); }
 }
 
 SunPosition.prototype.mousedown = function( _e ){
   var it = this;
 
-  var x = _e.offsetX;
-  var y = _e.offsetY;
+  var rect = it.canvas.getBoundingClientRect();
+  var x;
+  var y;
+  if( _e.touches ){
+    x = _e.touches[0].clientX - rect.left;
+    y = _e.touches[0].clientY - rect.top;
+  }else{
+    x = _e.clientX - rect.left;
+    y = _e.clientY - rect.top;
+  }
   var distX = x - it.size * 0.5;
   var distY = y - it.size * 0.5;
   var r = Math.sqrt( distX * distX + distY * distY );
@@ -173,8 +193,9 @@ SunPosition.prototype.mousedown = function( _e ){
 SunPosition.prototype.hammerPanmove = function( _e ){
   var it = this;
 
-  var x = _e.pointers[ 0 ].offsetX;
-  var y = _e.pointers[ 0 ].offsetY;
+  var rect = it.canvas.getBoundingClientRect();
+  var x = _e.pointers[ 0 ].clientX - rect.left;
+  var y = _e.pointers[ 0 ].clientY - rect.top;
   var distX = x - it.size * 0.5;
   var distY = y - it.size * 0.5;
   var r = Math.sqrt( distX * distX + distY * distY );
