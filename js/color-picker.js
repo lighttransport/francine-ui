@@ -495,7 +495,7 @@ ColorPicker = ( function() {
         l: 0.5
       } );
 
-      if ( typeof it.onchange === 'function' ) { it.onchange( it.color ); }
+      if ( typeof it.onChange === 'function' ) { it.onChange( it.color ); }
     }
 
     canvasMouseDown( _e ) {
@@ -514,4 +514,4 @@ ColorPicker = ( function() {
 
 } )();
 
-if ( typeof module !== 'undefined' && module.exports ) { module.exports = ColorPicker; }
+if ( typeof module !== 'undefined' && module.exportsbsbs ) { module.exports = ColorPicker; }
