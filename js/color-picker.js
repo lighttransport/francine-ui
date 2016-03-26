@@ -416,10 +416,10 @@ ColorPicker = ( function() {
       };
     }
 
-    getHex( _hsl ) {
+    getHex( _rgb ) {
       let it = this;
 
-      let rgb = it.hsltorgb( _hsl );
+      let rgb = _rgb;
 
       let hex = function( _i ) {
         return Math.round( _i * 255 ).toString( 16 ).replace( /^.$/, '0$&' );
@@ -473,7 +473,12 @@ ColorPicker = ( function() {
       it.color.hsl = it.hslString( it.color );
       it.button.style.background = it.color.hsl;
 
-      it.color.rgb = it.getHex( it.color );
+      let rgb = it.hsltorgb( it.color );
+      it.color.r = rgb.r;
+      it.color.g = rgb.g;
+      it.color.b = rgb.b;
+
+      it.color.rgb = it.getHex( rgb );
       it.textbox.value = it.color.rgb;
 
       let finv = 'invert( ' + ( 1.0 - it.color.s ) * 0.5 + ') ';
