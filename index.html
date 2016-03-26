@@ -13,16 +13,16 @@
 		</style>
 	</head>
 	<body>
-		<script src="three.js"></script>
-		<script src="hammer.min.js"></script>
-    <script src="Viewer.js"></script>
-    <script src="ControlPanel.js"></script>
-    <script src="color-picker.js"></script>
-    <script src="SunPosition.js"></script>
+		<script src="js/three.js"></script>
+		<script src="js/hammer.min.js"></script>
+    <script src="js/Viewer.js"></script>
+    <script src="js/ControlPanel.js"></script>
+    <script src="js/color-picker.js"></script>
+    <script src="js/SunPosition.js"></script>
 		<script>
       updateFunctions = [];
-      function update(){
-        for( var i=0; i<updateFunctions.length; i++ ){
+      function update() {
+        for ( var i = 0; i < updateFunctions.length; i ++ ) {
           updateFunctions[ i ]();
         }
 
@@ -31,24 +31,24 @@
       update();
 
 			resizeFunctions = [];
-			function resize(){
-				for( var i=0; i<resizeFunctions.length; i++ ){
+			function resize() {
+				for ( var i = 0; i < resizeFunctions.length; i ++ ) {
 					resizeFunctions[ i ]();
 				}
 			}
 			window.addEventListener( 'resize', resize );
 
 			keydownFunctions = [];
-			function keydown( _e ){
-				for( var i=0; i<keydownFunctions.length; i++ ){
+			function keydown( _e ) {
+				for ( var i = 0; i < keydownFunctions.length; i ++ ) {
 					keydownFunctions[ i ]( _e );
 				}
 			}
 			window.addEventListener( 'keydown', keydown );
 
 			keyupFunctions = [];
-			function keyup( _e ){
-				for( var i=0; i<keyupFunctions.length; i++ ){
+			function keyup( _e ) {
+				for ( var i = 0; i < keyupFunctions.length; i ++ ) {
 					keyupFunctions[ i ]( _e );
 				}
 			}
@@ -59,10 +59,10 @@
 			viewer.canvas.style.left = '0px';
 			viewer.canvas.style.top = '0px';
 			document.body.appendChild( viewer.canvas );
-			resizeFunctions.push( function(){
+			resizeFunctions.push( function() {
 				viewer.setSize( window.innerWidth, window.innerHeight );
 			} );
-      updateFunctions.push( function(){ viewer.update(); } );
+      updateFunctions.push( function() { viewer.update(); } );
       keydownFunctions.push( function( _e ){ viewer.keydown( _e ); } );
       keyupFunctions.push( function( _e ){ viewer.keyup( _e ); } );
 
@@ -77,13 +77,13 @@
 			colorPicker.mother.style.top = '50px';
       panel.panelRight.appendChild( colorPicker.mother );
       colorPicker.update();
-      //resizeFunctions.push( function(){ colorPicker.resize(); } );
+      //resizeFunctions.push( function() { colorPicker.resize(); } );
 		  colorPicker.textbox.style.position = 'absolute';
 		  colorPicker.textbox.style.left = '105px';
 		  colorPicker.textbox.style.top = '58px';
 			panel.panelRight.appendChild( colorPicker.textbox );
 
-			colorPicker.onChange = function( _color ){
+			colorPicker.onChange = function( _color ) {
 			};
 
 			sunPosition = new SunPosition();
@@ -92,13 +92,12 @@
 			sunPosition.canvas.style.left = '40px';
 			sunPosition.canvas.style.top = '110px';
       panel.panelRight.appendChild( sunPosition.canvas );
-      updateFunctions.push( function(){ sunPosition.update(); } );
+      updateFunctions.push( function() { sunPosition.update(); } );
 		  sunPosition.textboxes.style.position = 'absolute';
 			sunPosition.textboxes.style.left = '40px';
 			sunPosition.textboxes.style.top = '300px';
 			panel.panelRight.appendChild( sunPosition.textboxes );
-			sunPosition.onChange = function( _azimuth, _altitude ){
-				console.log( _azimuth );
+			sunPosition.onChange = function( _azimuth, _altitude ) {
 				viewer.setSun( _azimuth, _altitude );
 			};
 
