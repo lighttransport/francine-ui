@@ -17,7 +17,7 @@
 		<script src="hammer.min.js"></script>
     <script src="Viewer.js"></script>
     <script src="ControlPanel.js"></script>
-    <script src="ColorPicker.js"></script>
+    <script src="color-picker.js"></script>
     <script src="SunPosition.js"></script>
 		<script>
       updateFunctions = [];
@@ -72,12 +72,12 @@
 
       colorPicker = new ColorPicker();
 			colorPicker.setSize( 48 );
-			colorPicker.canvas.style.position = 'absolute';
-			colorPicker.canvas.style.left = '45px';
-			colorPicker.canvas.style.top = '50px';
-      panel.panelRight.appendChild( colorPicker.canvas );
-      updateFunctions.push( function(){ colorPicker.update(); } );
-      resizeFunctions.push( function(){ colorPicker.resize(); } );
+			colorPicker.mother.style.position = 'absolute';
+			colorPicker.mother.style.left = '45px';
+			colorPicker.mother.style.top = '50px';
+      panel.panelRight.appendChild( colorPicker.mother );
+      colorPicker.update();
+      //resizeFunctions.push( function(){ colorPicker.resize(); } );
 		  colorPicker.textbox.style.position = 'absolute';
 		  colorPicker.textbox.style.left = '105px';
 		  colorPicker.textbox.style.top = '58px';
